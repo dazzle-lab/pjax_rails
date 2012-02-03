@@ -2,7 +2,7 @@ module Pjax
   extend ActiveSupport::Concern
 
   included do
-    layout proc { |c| pjax_request? ? pjax_layout : 'application' }
+    alias_method_chain :render, :pjax_filter
     helper_method :pjax_request?
     before_filter :strip_pjax_param
     around_filter :set_pjax_url
@@ -32,6 +32,15 @@ module Pjax
     end
 
   private
+    def render_with_pjax_filter(*args)
+      if pjax_request?
+        args[0] = {} unless args[0]
+        args[0][:layout] = false
+      end
+
+      render_without_pjax_filter(*args)
+    end
+
     def redirect_pjax_to(action, url = nil)
       ActiveSupport::Deprecation.warn 'redirect_pjax_to is deprecated and will be removed in 0.4.0, use a regular redirect_to instead.'
 
